@@ -12,7 +12,8 @@ Dòng thời gian (29 s):
 import json, math, os, subprocess, sys, datetime as dt
 from multiprocessing import Pool
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-from fetch import ddir, default_date, ICT
+import fetch
+from fetch import ddir, default_date, ICT, S
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 W, H, TH, OY = 1080, 1920, 1440, 240          # khung vẽ nội bộ (terminal 3:4 ở y=240)
@@ -206,8 +207,8 @@ class Story:
         self.items.sort(key=lambda x: x[0])
         # LOG + tail
         self.rows, self.tail = [], []
-        self.rows.append((SCAN0, "23:00", "SCAN", None, f"{night['scanned']} trending pools", "GeckoTerminal · Solana", "", DIM))
-        self.rows.append((SCAN_END, "23:00", "CHECK", None, f"{night['passed']} pass · {night['filtered']} blocked", "mint/freeze · top10 · liq · vol", "", DIM))
+        self.rows.append((SCAN0, S()["a"], "SCAN", None, f"{night['scanned']} trending pools", "GeckoTerminal · Solana", "", DIM))
+        self.rows.append((SCAN_END, S()["a"], "CHECK", None, f"{night['passed']} pass · {night['filtered']} blocked", "mint/freeze · top10 · liq · vol", "", DIM))
         self.curve = [(T0, night["start"])]
         for vt, k, p in self.items:
             if k == "check":
@@ -311,13 +312,13 @@ class Painter:
         self.g_gold = circle_glow(84, YELLOW, 26)
         self.g_loss = glow_sprite((self.FX1 - self.FX0, self.FY1 - self.FY0), PINK, 26, 22, 1.0, 14)
         self.pct = (n["end"] / n["start"] - 1) * 100
-        self.captions = [(0.0, "ONE NIGHT. REAL CHARTS.", YELLOW),
+        self.captions = [(0.0, S()["one"] + ". REAL CHARTS.", YELLOW),
                          (HOOK, f"{n['scanned']} trending tokens → {n['filtered']} rejected", TXT),
                          (T0, f"{n['passed']} passed the rug check", GREEN),
-                         (8.5, "the bot trades till 7am", TXT),
+                         (8.5, S()["till"], TXT),
                          (14.5, "every trade gets a reason", TXT),
                          (20.0, f"{n['trades']} trades · {n['wins']} W / {n['losses']} L", TXT),
-                         (T1, f"{self.pct:+.1f}% in one night · paper", GREEN if self.pct >= 0 else PINK)]
+                         (T1, f"{self.pct:+.1f}% {S()['inone']} · paper", GREEN if self.pct >= 0 else PINK)]
         self.cap_sprites = [(t0, text_sprite(txt, F("iExtraBold", 46), c)) for t0, txt, c in self.captions]
         self.title = text_sprite("MR PUMP", F("iExtraBold", 72), YELLOW)
         self._end_core = None
@@ -337,7 +338,7 @@ class Painter:
         for i, c in enumerate([(255, 95, 86), (255, 189, 46), (39, 201, 63)]):
             d.ellipse((36 + i * 24, 272, 50 + i * 24, 286), fill=c)
         date_s = dt.datetime.fromisoformat(n["window"][0]).strftime("%d %b %Y")
-        d.text((470, 279), f"Solana · {date_s} · 23:00→07:00", font=F("Regular", 19), fill=DIM, anchor="mm")
+        d.text((470, 279), f"Solana · {date_s} · {S()['a']}→{S()['b']}", font=F("Regular", 19), fill=DIM, anchor="mm")
         dashed_rr(d, (836, 264, 1050, 294), 8, GREEN, 2, 6, 4)
         d.text((943, 279), "paper · real prices", font=F("Medium", 17), fill=GREEN, anchor="mm")
         d.line((self.FX0 + 2, 302, self.FX1 - 2, 302), fill=LINE, width=1)
@@ -348,7 +349,7 @@ class Painter:
         d.text((184 + f.getlength("MR PUMP "), 316), "Terminal", font=f, fill=TXT)
         bx = 184 + f.getlength("MR PUMP Terminal ")
         dashed_rr(d, (bx, 322, bx + 108, 350), 6, YELLOW, 2, 5, 3)
-        d.text((bx + 54, 336), "v2.0-night", font=F("Medium", 15), fill=YELLOW, anchor="mm")
+        d.text((bx + 54, 336), S()["ver"], font=F("Medium", 15), fill=YELLOW, anchor="mm")
         d.text((1046, 376), "balance", font=F("Regular", 18), fill=DIM, anchor="ra")
         for x, lab in ((770, "trades"), (890, "wins"), (1000, "losses")):
             d.text((x, 446), lab, font=F("Regular", 17), fill=DIM, anchor="ma")
@@ -363,7 +364,7 @@ class Painter:
         rr(d, (546, 1106, self.PX1, 1388), 18, outline=LINE, width=2)
         d.text((40, 672), "LIVE FLOW · SCAN → CHECK → SIZE → EXEC → LOG", font=F("Medium", 18), fill=DIM)
         d.text((40, 1118), "TRADE · 5m CANDLES", font=F("Medium", 18), fill=DIM)
-        d.text((562, 1118), "$ tail -f night.log", font=F("Medium", 19), fill=TXT)
+        d.text((562, 1118), "$ tail -f " + S()["log"], font=F("Medium", 19), fill=TXT)
         d.text((40, 1412), "RESULT · equity curve", font=F("Medium", 18), fill=DIM)
         d.text((40, 1564), "LOG · every trade gets a reason", font=F("Medium", 18), fill=DIM)
         self.nodes = [(250, 874, 54, PINK, "RUG CHECK"), (540, 874, 74, GREEN, "MR PUMP"), (830, 874, 54, GREEN, "EXECUTOR")]
@@ -462,7 +463,7 @@ class Painter:
         card = Image.new("RGBA", (960, 700), (0, 0, 0, 0))
         cd = ImageDraw.Draw(card)
         cd.rounded_rectangle((0, 0, 959, 699), 40, fill=(10, 30, 21, 240), outline=YELLOW + (255,), width=5)
-        cd.text((480, 96), "ONE NIGHT · REAL CHARTS", font=F("ExtraBold", 38), fill=YELLOW, anchor="mm")
+        cd.text((480, 96), S()["one"] + " · REAL CHARTS", font=F("ExtraBold", 38), fill=YELLOW, anchor="mm")
         cd.text((480, 220), f"{money(n['start'])} → {money(n['end'])}", font=F("ExtraBold", 70), fill=TXT, anchor="mm")
         col = GREEN if self.pct >= 0 else PINK
         cd.text((480, 380), f"{self.pct:+.1f}%", font=F("iBlack", 190), fill=col, anchor="mm")
@@ -483,7 +484,7 @@ class Painter:
                 h = rnd.randrange(8, 44)
                 dx = int(rnd.uniform(-70, 70) * g)
                 im.paste(src.crop((0, y, W, y + h)), (dx, y))
-            ImageDraw.Draw(im).text((W // 2, 1450), "◀◀  REWIND TO 23:00", font=F("ExtraBold", 46), fill=TXT, anchor="mm")
+            ImageDraw.Draw(im).text((W // 2, 1450), "◀◀  REWIND TO " + S()["a"], font=F("ExtraBold", 46), fill=TXT, anchor="mm")
         return im
 
     def report(self, im, t):
@@ -496,9 +497,9 @@ class Painter:
         col = GREEN if self.pct >= 0 else PINK
         cd.rounded_rectangle((0, 0, CW - 1, CH - 1), 40, fill=(10, 30, 21, 248), outline=col + (255,), width=5)
         date_s = dt.datetime.fromisoformat(n["window"][0]).strftime("%d %b %Y")
-        cd.text((CW // 2, 170), f"NIGHT REPORT · {date_s}", font=F("ExtraBold", 34), fill=DIM, anchor="mm")
+        cd.text((CW // 2, 170), f"{S()['report']} · {date_s}", font=F("ExtraBold", 34), fill=DIM, anchor="mm")
         cd.text((CW // 2, 285), money(n["end"]), font=F("iBlack", 140), fill=col, anchor="mm")
-        cd.text((CW // 2, 400), f"{self.pct:+.1f}% from {money(n['start'])} in one night", font=F("iSemiBold", 38), fill=TXT, anchor="mm")
+        cd.text((CW // 2, 400), f"{self.pct:+.1f}% from {money(n['start'])} {S()['inone']}", font=F("iSemiBold", 38), fill=TXT, anchor="mm")
         wr = n["wins"] / max(1, n["trades"]) * 100
         for i, (v, lab) in enumerate([(str(n["trades"]), "trades"), (f"{wr:.0f}%", "win rate"), (f"{n['filtered']}/{n['scanned']}", "filtered")]):
             x = 175 + i * 325
@@ -845,7 +846,7 @@ class Painter:
 
     def status(self, st, end):
         if end:
-            return f"NIGHT CLOSED · {st['trades']} TRADES LOGGED"
+            return f"{S()['noun'].upper()} CLOSED · {st['trades']} TRADES LOGGED"
         k, p = st["lastk"], st["last"]
         if k == "check":
             return f"SCANNER · {'PASSED' if p['ok'] else 'BLOCKED'} ${p['symbol'][:10]}"
@@ -911,7 +912,7 @@ class Painter:
         if name == "EQUITY":
             return f"{money(st['bal'])} · {st['trades']} closes"
         if name == "YOU":
-            return f"{st['line']} lines to read at 7am"
+            return f"{st['line']} lines to read at {S()['wake']}"
 
 
 def load(date):
@@ -957,7 +958,7 @@ def video(date, jobs=4):
         paths = pool.map(_seg, segs)
     lst = f"{out}/_segs.txt"
     open(lst, "w").write("".join(f"file '{p}'\n" for p in paths))
-    dst = f"{out}/mrpump_{date}_silent.mp4"
+    dst = f"{out}/mrpump_{date}{S()['suffix']}_silent.mp4"
     subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", dst], check=True)
     for p_ in paths + [lst]:
         os.remove(p_)
@@ -967,6 +968,8 @@ def video(date, jobs=4):
 
 if __name__ == "__main__":
     a = sys.argv[1:]
+    if "--session" in a:
+        fetch.SESSION = a[a.index("--session") + 1]
     date = dt.date.fromisoformat(a[a.index("--date") + 1]) if "--date" in a else default_date()
     if "still" in a:
         P = Painter(make_story(date))

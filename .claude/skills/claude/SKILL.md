@@ -8,17 +8,17 @@ description: "Gọi bằng /claude: dựng video 9:16 ~28 s 'MR PUMP Terminal' t
 Trả lời người dùng bằng tiếng Việt; chữ trên video bằng tiếng Anh. Gọi /claude không kèm gì: dựng video cho đêm gần nhất, không hỏi lại.
 
 ## 0. Cú pháp
-`/claude [date=YYYY-MM-DD] [start=USD] [scan|candles|render]` — `date` là ngày bắt đầu đêm (giờ VN). `start` vốn giấy, mặc định $150.
+`/claude [night|day] [date=YYYY-MM-DD] [start=USD]` — 2 phiên: night 23:00→07:00, day 11:00→19:00 (giờ VN); `date` là ngày bắt đầu phiên. Không ghi phiên: chọn phiên vừa kết thúc gần nhất. `start` vốn giấy, mặc định $150.
 
 ## 1. Engine
-Repo `nguyentv2912/mrpump` (fetch.py, sim.py, render.py, audio.py, run.py, README.md). Chạy `python3 run.py [--date D] [--start N]` ở chế độ nền (~3–5 phút). Output `output/MR_PUMP_<date>.mp4`. Dữ liệu từng ngày lưu ở `data/<date>/` và được commit.
+Repo `nguyentv2912/mrpump` (fetch.py, sim.py, render.py, audio.py, run.py, README.md). Chạy `python3 run.py [--session night|day] [--date D] [--start N]` ở chế độ nền (~3–5 phút). Output `output/MR_PUMP_<date>.mp4`. Dữ liệu từng ngày lưu ở `data/<date>/` và được commit.
 Cần mạng tới api.geckoterminal.com; bị chặn thì nói rõ, không bịa số thay.
 
 ## 2. Dữ liệu và bộ lọc (thật)
 - Trending: GeckoTerminal `trending_pools` Solana, 3 trang (~60 pool: PumpSwap/Pump.fun, Raydium, Meteora).
 - SCANNER: quote SOL/USDC, thanh khoản ≥ $30k, vol 24h ≥ $200k, FDV ≤ $30M, ≥ 500 trader/24h.
 - RUG CHECK (`tokens/{addr}/info`): mint và freeze authority đã khoá, không honeypot, top 10 ví ≤ 35%, dev ≤ 10%, GT score ≥ 45, ≥ 500 holder.
-- Hằng ngày: `fetch.py scan` lúc ~23:00 giờ VN (chụp danh sách TRƯỚC đêm, không thiên lệch), `fetch.py candles` + `run.py --skip-fetch` sau 07:00. Chạy scan muộn hơn thì báo người dùng có thiên lệch chọn mẫu.
+- Hằng ngày: `fetch.py scan [--session day]` ~10 phút trước giờ bắt đầu phiên (chụp danh sách TRƯỚC đêm, không thiên lệch), `fetch.py candles` + `run.py --skip-fetch` sau 07:00. Chạy scan muộn hơn thì báo người dùng có thiên lệch chọn mẫu.
 
 ## 3. Giao dịch (paper trade trên giá thật)
 Tín hiệu: nến 5 phút đóng trên đỉnh 30 phút trước, volume ≥ 2× trung bình 1 giờ, nến xanh → vào ở giá mở nến sau. Size 24–40% vốn theo độ mạnh volume, tối đa 2 lệnh mở. Phí + trượt 1,5% mỗi chiều. Thoát: stop −8%, chốt +30%, trailing 10% khi lãi ≥ 10%, time stop 30 phút, đóng hết lúc 07:00.

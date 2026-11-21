@@ -5,6 +5,7 @@
 import os, sys, json, wave, datetime as dt
 import numpy as np
 from scipy.signal import butter, sosfilt
+import fetch
 from fetch import default_date
 from render import make_story, TEND, T1, T0, HOOK, HERE
 
@@ -242,7 +243,7 @@ def build(date):
     x = np.tanh(x / max(1e-9, np.max(np.abs(x))) * 1.4) * 0.9
     st = np.stack([x, np.roll(hp(x, 2000), 220) * 0.25 + x], 1)      # rộng nhẹ
     st /= np.max(np.abs(st)) * 1.05
-    out = os.path.join(HERE, "output", f"mrpump_{date}.wav")
+    out = os.path.join(HERE, "output", f"mrpump_{date}{fetch.S()['suffix']}.wav")
     with wave.open(out, "wb") as w:
         w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
         w.writeframes((st * 32767).astype(np.int16).tobytes())

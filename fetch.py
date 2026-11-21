@@ -13,6 +13,19 @@ ICT = dt.timezone(dt.timedelta(hours=7))
 HERE = os.path.dirname(os.path.abspath(__file__))
 _last = [0.0]
 
+# Hai phiên mỗi ngày (giờ VN): đêm 23:00→07:00 và ngày 11:00→19:00
+SESS = {
+    "night": dict(start=23, a="23:00", b="07:00", one="ONE NIGHT", noun="night", till="the bot trades till 7am",
+                  report="NIGHT REPORT", inone="in one night", log="night.log", wake="7am", ver="v2.0-night", suffix=""),
+    "day": dict(start=11, a="11:00", b="19:00", one="ONE DAY", noun="day", till="the bot trades till 7pm",
+                report="DAY REPORT", inone="in one day", log="day.log", wake="7pm", ver="v2.0-day", suffix="_day"),
+}
+SESSION = "night"
+
+
+def S():
+    return SESS[SESSION]
+
 
 def get(path, tries=4):
     for i in range(tries):
@@ -38,12 +51,15 @@ def get(path, tries=4):
 
 
 def night_window(date):
-    start = dt.datetime.combine(date, dt.time(23, 0), ICT)
+    start = dt.datetime.combine(date, dt.time(S()["start"], 0), ICT)
     return start, start + dt.timedelta(hours=8)
 
 
 def default_date():
+    """Phiên gần nhất đã kết thúc."""
     now = dt.datetime.now(ICT)
+    if SESSION == "day":
+        return now.date() if now.hour >= 19 else now.date() - dt.timedelta(days=1)
     d = now.date() - dt.timedelta(days=1)
     if now.hour < 7:
         d -= dt.timedelta(days=1)
@@ -51,13 +67,15 @@ def default_date():
 
 
 def tonight():
-    """Đêm sắp tới (để quét lúc ~23:00): từ 12:00 trở đi là đêm hôm nay."""
+    """Phiên sắp tới (quét trước giờ bắt đầu ~10 phút). Đêm: từ 12:00 trở đi là đêm hôm nay."""
     now = dt.datetime.now(ICT)
+    if SESSION == "day":
+        return now.date()
     return now.date() if now.hour >= 12 else now.date() - dt.timedelta(days=1)
 
 
 def ddir(date):
-    p = os.path.join(HERE, "data", date.isoformat())
+    p = os.path.join(HERE, "data", date.isoformat() + S()["suffix"])
     os.makedirs(p, exist_ok=True)
     return p
 
@@ -139,6 +157,8 @@ def candles(date):
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if "--session" in args:
+        SESSION = args[args.index("--session") + 1]
     date = default_date()
     if "--date" in args:
         date = dt.date.fromisoformat(args[args.index("--date") + 1])

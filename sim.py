@@ -9,7 +9,8 @@ SIZER    : 24–40% vốn theo độ mạnh volume, tối đa 2 lệnh cùng lú
 EXECUTOR : trượt giá + phí 1,5% mỗi chiều; stop −8%, chốt +30%, trailing 10% khi đã lãi ≥ 10%, time stop 30 phút
 """
 import json, os, sys, datetime as dt
-from fetch import ddir, default_date, night_window, ICT
+import fetch
+from fetch import ddir, default_date, night_window, ICT, S
 
 R = dict(liq=30_000, vol24=200_000, fdv=30e6, traders=500, top10=35, dev=10, gt=45, holders=500,
          look=6, volx=2.0, slip=0.015, stop=0.08, tp=0.30, trail_on=0.10, trail=0.10, tstop=6, tmin=0.02, maxpos=2)
@@ -132,7 +133,7 @@ def run(date, start_cap=150.0):
         events.append(dict(t=ts, kind="enter", sym=sym, size=size, why=p["reason"], price=px, eq=None))
     step_positions(e0 + 3600)
     for p in list(open_pos):
-        close(p, e0, price_at(p["pool"], e0), "closed at 07:00"); open_pos.remove(p)
+        close(p, e0, price_at(p["pool"], e0), "closed at " + S()["b"]); open_pos.remove(p)
 
     events.sort(key=lambda e: (e["t"], e["kind"] != "exit"))
     eq = start_cap
@@ -141,7 +142,7 @@ def run(date, start_cap=150.0):
             eq += e["pnl"]
         e["bal"] = round(eq, 2)
     wins = sum(1 for t in trades if t["pnl"] > 0)
-    res = dict(date=date.isoformat(), window=[n0.isoformat(), n1.isoformat()], start=start_cap,
+    res = dict(session=fetch.SESSION, date=date.isoformat(), window=[n0.isoformat(), n1.isoformat()], start=start_cap,
                end=round(start_cap + sum(t["pnl"] for t in trades), 2), trades=len(trades), wins=wins,
                losses=len(trades) - wins, scanned=len(checks), passed=len(passed),
                filtered=len(checks) - len(passed), rules=R, captured_at=snap["captured_at"],
@@ -156,6 +157,8 @@ def run(date, start_cap=150.0):
 
 if __name__ == "__main__":
     a = sys.argv[1:]
+    if "--session" in a:
+        fetch.SESSION = a[a.index("--session") + 1]
     d = dt.date.fromisoformat(a[a.index("--date") + 1]) if "--date" in a else default_date()
     s = float(a[a.index("--start") + 1]) if "--start" in a else 150.0
     run(d, s)

@@ -1,6 +1,6 @@
 # MR PUMP Terminal
 
-Video 9:16 (~28 s) "một đêm, sáu agent, log trước" cho meme coin Solana, dựng từ **dữ liệu on-chain thật**.
+Video 9:16 (~29 s) "sáu agent, log trước", **2 phiên mỗi ngày**: đêm 23:00→07:00 và ngày 11:00→19:00 (giờ VN), cho meme coin Solana, dựng từ **dữ liệu on-chain thật**.
 
 | Bước | File | Việc làm |
 |---|---|---|
@@ -12,7 +12,8 @@ Video 9:16 (~28 s) "một đêm, sáu agent, log trước" cho meme coin Solana,
 | 6 | `run.py` | Chạy hết, loudnorm −14 LUFS → `output/MR_PUMP_<date>.mp4`. |
 
 ```bash
-python3 run.py                       # đêm gần nhất, vốn $150
+python3 fetch.py scan [--session day]   # chạy ~10 phút trước giờ bắt đầu phiên
+python3 run.py [--session day]          # sau khi phiên kết thúc: nến + giả lập + video + caption .txt
 python3 run.py --date 2026-11-20 --skip-fetch --start 200
 ```
 
