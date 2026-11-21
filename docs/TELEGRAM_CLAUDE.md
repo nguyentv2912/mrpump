@@ -5,6 +5,7 @@ Mục tiêu: chủ kênh gõ `/claude` trong Telegram → bot dựng video MR PU
 ## Cú pháp
 ```
 /claude                      # đêm gần nhất (23:00 → 07:00 giờ VN), vốn giấy $150
+/claude day                  # phiên ngày gần nhất (11:00 → 19:00)
 /claude date=2026-11-20      # một đêm cụ thể
 /claude start=200            # đổi vốn giấy
 ```
@@ -15,12 +16,11 @@ Mục tiêu: chủ kênh gõ `/claude` trong Telegram → bot dựng video MR PU
 3. Chạy:
    ```bash
    cd ~/mrpump && git pull -q origin main
-   python3 run.py [--date YYYY-MM-DD] [--start N]      # 1–3 phút
+   python3 run.py [--session night|day] [--date YYYY-MM-DD] [--start N]   # 2–10 phút
    ```
    (Lần đầu: `git clone https://github.com/nguyentv2912/mrpump ~/mrpump`.)
-4. Gửi `output/MR_PUMP_<ngày>.mp4` bằng `sendVideo` (≈8 MB, dưới giới hạn 50 MB của bot), `supports_streaming=true`, caption lấy từ `data/<ngày>/night.json`:
-   `MR PUMP · <ngày> · $<start> → $<end> (<+x.x%>) · <trades> lệnh <wins>W/<losses>L · paper trades trên giá thật`
-5. Nếu log có dòng `CẢNH BÁO: chưa có bản quét lúc 23:00` thì thêm vào caption: "⚠️ danh sách trending chụp sau đêm (có thiên lệch)".
+4. Gửi `output/MR_PUMP_<ngày>[_day].mp4` bằng `sendVideo` (≈8 MB, dưới giới hạn 50 MB của bot), `supports_streaming=true`, caption lấy nguyên từ `output/MR_PUMP_<ngày>[_day].txt` (run.py ghi sẵn).
+5. Nếu log có dòng `CẢNH BÁO: chưa có bản quét` thì thêm vào caption: "⚠️ danh sách trending chụp sau đêm (có thiên lệch)".
 6. Lỗi (mạng GeckoTerminal, ffmpeg…): gửi 10 dòng cuối của log vào chat, không gửi video.
 
 ## Yêu cầu máy
