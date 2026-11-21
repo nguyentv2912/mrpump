@@ -65,7 +65,11 @@ python3 run.py --session night                   # job 07:30   (job 19:30: --ses
 - Lỗi → gửi 10 dòng cuối log vào Telegram, không đăng.
 
 ## 2. Upload + hẹn đăng Buffer (giống /octo và /grok)
-1. Upload mp4 lên kho công khai **octo-videos** (đặt tên `mrpump/MR_PUMP_<ngày>[_day].mp4`), lấy **link raw** tải trực tiếp. Kiểm tra link trả về `200` và `Content-Type: video/mp4` trước khi gọi Buffer.
+0. **Kiểm tra trước (bắt buộc):** `python3 post_plan.py --session night|day [--due 'YYYY-MM-DD HH:MM'] [--url <link raw>]`.
+   Mã thoát `0` = được đăng (in sẵn 2 payload `create_post` cho TikTok + Instagram); `2` = **không đăng**, gửi các lý do in ra vào Telegram.
+   Script tự chặn: thiếu video/caption, caption thiếu nhãn, bản quét chụp sau giờ bắt đầu phiên (thiên lệch), dữ liệu > 24 giờ so với giờ đăng, giờ đăng đã qua.
+   Phần "không trùng giờ" và "giới hạn video/ngày" vẫn do bot kiểm tra với hàng đợi Buffer như /octo, /grok; dời giờ thì chạy lại post_plan.py với `--due` mới.
+1. Upload mp4 lên kho công khai **octo-videos** (đặt tên `mrpump/MR_PUMP_<ngày>[_day].mp4`), lấy **link raw** tải trực tiếp, cùng cách bot đang làm cho /octo (link raw GitHub trả `Content-Type: application/octet-stream`, không phải `video/mp4`; nếu /octo đã đăng được với link raw thì giữ nguyên cách đó). Kiểm tra link trả `200` và đúng dung lượng file trước khi gọi Buffer.
 2. Hẹn đăng trên **cả hai kênh** (organization "My Organization"):
    - TikTok **mr.pump395** — channelId `6ae71290e29c69a17125bdd6`
    - Instagram **pumpmeme.crypto** — channelId `6ae71222e29c69a17125ba7a`
