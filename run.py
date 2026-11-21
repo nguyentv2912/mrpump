@@ -36,7 +36,7 @@ cap = (f"MR PUMP · {S['noun']} {date:%d/%m} · {S['a']}→{S['b']} (UTC+7)\n"
        f"{res['scanned']} trending Solana tokens → {res['passed']} passed the rug check → {res['trades']} trades "
        f"({res['wins']}W/{res['losses']}L)\n"
        f"${res['start']:.0f} → ${res['end']:,.2f} ({pct:+.1f}%)\n"
-       f"Paper trades simulated on real on-chain prices (GeckoTerminal). Not financial advice.\n"
+       f"paper trades trên giá thật · not financial advice (data: GeckoTerminal)\n"
        f"#solana #memecoin #crypto #tradingbot #pumpfun")
 open(os.path.join(render.HERE, "output", name + ".txt"), "w").write(cap)
 r = subprocess.run(["ffmpeg", "-nostdin", "-i", out, "-af", "ebur128=peak=true", "-f", "null", "-"], capture_output=True, text=True).stderr
